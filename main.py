@@ -16,12 +16,36 @@ def main():
         print(f"Error: Couldn't find the target video.")
         return
 
+    """
+    In this step, we only need the timestamp, it doesn't matter if the transcription is 
+    accurate or not. So we should 
+    1. Use the most minimalist model.
+    2. Store the timestamp only.
+    """
     # Step 1: Generate clean SRT file
 
+    """
+    For example, the timestamp from Step 1 should look like
+    ..., (2341.12, 2348.10), (2351.03, 2359.83), ...
+    
+    In step 2, we first examine if the gap exceeds 1.2 seconds.
+    If it does, we trim the gap between 2348.10+0.5 and 2351.03-0.5.
+    """
     # Step 2: Cut silence over $gap seconds long
         # Cut the gap in both SRT and Video
 
-    # Step 3: Combine incomplete sentences in SRT file
+    """
+    Regenerate the SRT file for the processed video.
+    """
+    # Step 3: Regenerate the SRT file
+
+    """
+    This step is kinda optional, cause I think the Professor won't be that picky.
+    
+    Using LLM processes the SRT file, making it more readable for humans.
+    We should divide the SRT file into
+    """
+    # Step 4: Combine incomplete sentences in SRT file
         # Combine incomplete sentences
         # Make the combined sentence look tidy
 

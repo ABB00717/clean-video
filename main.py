@@ -66,9 +66,8 @@ def main():
         previous_segment_end = new_end
         
     # Append the remain clip
-    if previous_segment_end != 0.00:
-        clip = video_file_clip.subclipped(previous_segment_end, video_file_clip.duration)
-        videoclips.append(clip)
+    clip = video_file_clip.subclipped(previous_segment_end, video_file_clip.duration)
+    videoclips.append(clip)
 
     # Combine the clips we want
     combined = concatenate_videoclips(videoclips)

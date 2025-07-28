@@ -2,6 +2,7 @@ import argparse
 import os.path
 
 from faster_whisper import WhisperModel
+from faster_whisper.transcribe import Segment
 
 def main():
     # Read arguments
@@ -23,6 +24,19 @@ def main():
     2. Store the timestamp only.
     """
     # Step 1: Generate clean SRT file
+    model_size = "tiny"
+
+    model = WhisperModel(model_size, device="cuda", compute_type="float16")
+    segments, info = model.transcribe(audio=args.input_file, language="zh", word_timestamps=True, beam_size=2)
+
+    to_be_deleted: List[Segment] = []
+    previous_segment_end = 0.00
+    for segment in segments:
+        if segment.start - previous_segment_end > args.gap:
+            to_be_deleted.append(segment)
+
+        previous_segment_end = segment.end
+        print(segment.start, segment.end, segment.text)
 
     """
     For example, the timestamp from Step 1 should look like

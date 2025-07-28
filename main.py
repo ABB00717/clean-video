@@ -25,10 +25,10 @@ def main():
     2. Store the timestamp only.
     """
     # Step 1: Generate clean SRT file
-    model_size = "turbo"
+    model_size = "small"
 
     model = WhisperModel(model_size, device="cuda", compute_type="float16")
-    segments, info = model.transcribe(audio=args.input_file, language="en", word_timestamps=True, beam_size=2)
+    segments, info = model.transcribe(audio=args.input_file, language="en", word_timestamps=True)
 
     segments_to_be_deleted: List[Tuple] = []
     previous_segment_end = 0.00

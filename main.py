@@ -28,13 +28,15 @@ def main():
     model_size = "turbo"
 
     model = WhisperModel(model_size, device="cuda", compute_type="float16")
-    segments, info = model.transcribe(audio=args.input_file, language="zh", word_timestamps=True, beam_size=2)
+    segments, info = model.transcribe(audio=args.input_file, language="en", word_timestamps=True, beam_size=2)
 
-    segments_to_be_deleted: List[Segment] = []
+    segments_to_be_deleted: List[Tuple] = []
     previous_segment_end = 0.00
     for segment in segments:
         if segment.start - previous_segment_end > args.gap:
-            segments_to_be_deleted.append(segment)
+            # This is so wrong wtf
+            # We should cut the silence part instead of the clip after the silence ...
+            segments_to_be_deleted.append((previous_segment_end, segment.start))
             print(segment.start, segment.end, segment.text)
 
         previous_segment_end = segment.end
@@ -53,8 +55,8 @@ def main():
     video_file_clip = VideoFileClip(args.input_file)
     for segment in segments_to_be_deleted:
         half_gap = args.gap/2
-        new_start = segment.start + half_gap
-        new_end = segment.end - half_gap
+        new_start = segment[0] + half_gap
+        new_end = segment[1] - half_gap
 
         # Cut the gap in both SRT and Video
         if new_start < new_end:

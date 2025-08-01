@@ -29,15 +29,18 @@ def main():
     model_size = "small"
 
     model = WhisperModel(model_size, device="cuda", compute_type="float16")
-    segments, info = model.transcribe(audio=args.input_file, word_timestamps=True)
+    segments, info = model.transcribe(
+            audio=args.input_file, word_timestamps=True)
 
     segments_to_be_deleted: List[Tuple] = []
     previous_segment_end = 0.00
     for segment in segments:
         if segment.start - previous_segment_end > args.gap:
             # This is so wrong wtf
-            # We should cut the silence part instead of the clip after the silence ...
-            segments_to_be_deleted.append((previous_segment_end, segment.start))
+            # We should cut the silence part instead of the clip
+            # after the silence ...
+            segments_to_be_deleted.append(
+                    (previous_segment_end, segment.start))
             print(segment.start, segment.end, segment.text)
 
         previous_segment_end = segment.end
@@ -48,7 +51,8 @@ def main():
 
     In step 2, we first examine if the gap exceeds 1.2 seconds.
     If it does, we trim the gap between 2348.10+0.5 and 2351.03-0.5.
-    But we can't actually trim it, instead, we record the parts we want then merge them.
+    But we can't actually trim it, instead, we record
+    the parts we want then merge them.
     """
     # Step 2: Cut silence over $gap seconds long
     videoclips = []
@@ -68,7 +72,8 @@ def main():
         previous_segment_end = new_end
 
     # Append the remain clip
-    clip = video_file_clip.subclipped(previous_segment_end, video_file_clip.duration)
+    clip = video_file_clip.subclipped(
+            previous_segment_end, video_file_clip.duration)
     videoclips.append(clip)
 
     # Combine the clips we want

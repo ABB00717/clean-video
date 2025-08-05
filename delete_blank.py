@@ -26,11 +26,11 @@ def main():
     2. Store the timestamp only.
     """
     # Step 1: Generate clean SRT file
-    model_size = "small"
+    model_size = "base"
 
-    model = WhisperModel(model_size, device="cuda", compute_type="float16")
+    model = WhisperModel(model_size, device="cuda")
     segments, info = model.transcribe(
-            audio=args.input_file, word_timestamps=True)
+            audio=args.input_file, word_timestamps=True, language="zh")
 
     segments_to_be_deleted: List[Tuple] = []
     previous_segment_end = 0.00
@@ -39,10 +39,11 @@ def main():
             # This is so wrong wtf
             # We should cut the silence part instead of the clip
             # after the silence ...
+            print("Gotcha")
             segments_to_be_deleted.append(
                     (previous_segment_end, segment.start))
-            print(segment.start, segment.end, segment.text)
 
+        print(segment.start, segment.end, segment.text)
         previous_segment_end = segment.end
 
     """
@@ -66,8 +67,7 @@ def main():
         # Cut the gap in both SRT and Video
         if new_start < new_end:
             clip = video_file_clip.subclipped(previous_segment_end, new_start)
-            combined = concatenate_videoclips(clip)
-            videoclips.append(combined)
+            videoclips.append(clip)
 
         previous_segment_end = new_end
 

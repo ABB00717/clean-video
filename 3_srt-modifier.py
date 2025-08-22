@@ -20,7 +20,8 @@ load_dotenv()
 client = genai.Client(api_key=str(os.getenv("GEMINI_API_KEY")))
 
 # System instruction defines the persona, rules, and output format.
-SYSTEM_INSTRUCTION = textwrap.dedent("""
+SYSTEM_INSTRUCTION = textwrap.dedent(
+    """
     我是一個專業的字幕編輯，擅長將口語化的逐字稿，精煉成更具可讀性、更通順的書面風格字幕。我會遵循以下規則來完成任務。
 
     ## Rules:
@@ -29,7 +30,8 @@ SYSTEM_INSTRUCTION = textwrap.dedent("""
     2.  **修正錯字**: 根據上下文，修正明顯的打字錯誤或同音異字錯誤。
     舉例：這其實就是一個什麼 -> 這其實就是什麼
     3.  **判斷合併**:
-        - 如果「目標句」在語意上是「前一句」的直接延續，且兩句合併後成為一個更完整、通順的短句，則將「是否與前一個句子合併」設為 `true`。
+        - 如果「目標句」在語意上是「前一句」的直接延續，且兩句合併後成為一個更完整、通順的短句，則將 merge 設為 `true`。
+            - 若 merge 為 true，我的外部工具會自動將這一句與前一句合併，所以你不必再重述上一個句子，但你一定要確保他們合併後是通順的。
         - 如果「目標句」本身就是一個完整的句子，或者與前一句的關聯性不強，則設為 `false`。
     舉例：
     前一個句子: 那到底哪些東西是
@@ -41,9 +43,10 @@ SYSTEM_INSTRUCTION = textwrap.dedent("""
     ## Output Format:
     {
       "output": "{修改後的目標句文字}",
-      "是否與前一個句子合併": true/false
+      "merge": true/false
     }
-    """)
+    """
+)
 
 
 def main():
@@ -60,13 +63,17 @@ def main():
         sys.exit(1)
 
     if len(subtitles) < 1:
-        print(f"The SRT file is empty")
+        print("The SRT file is empty")
         sys.exit(1)
 
     final_subtitles = []
     for i, current_sub in enumerate(subtitles):
-        pre_2_sentence = subtitles[i - 2].content if i > 1 else ""
-        pre_1_sentence = subtitles[i - 1].content if i > 0 else ""
+        pre_2_sentence = (
+            final_subtitles[-2].content if len(final_subtitles) > 1 else ""
+        )
+        pre_1_sentence = (
+            final_subtitles[-1].content if len(final_subtitles) > 0 else ""
+        )
         cur_sentence = current_sub.content
         next_1_sentence = subtitles[i + 1].content if i < len(subtitles) - 1 else ""
         next_2_sentence = subtitles[i + 2].content if i < len(subtitles) - 2 else ""
@@ -89,16 +96,22 @@ def main():
                 contents=user_prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_INSTRUCTION,
-                    thinking_config=types.ThinkingConfig(thinking_budget=0), # Disables thinking
+                    thinking_config=types.ThinkingConfig(
+                        thinking_budget=0
+                    ),  # Disables thinking
                     temperature=0.2,
                     response_mime_type="application/json",
-                    response_schema=Modified_Sentence
+                    response_schema=Modified_Sentence,
                 ),
             )
 
             modified_data = Modified_Sentence.model_validate_json(response.text)
 
-            if modified_data.merge and final_subtitles:
+            if (
+                modified_data.merge
+                and final_subtitles
+                and len(modified_data.output) + len(final_subtitles[-1].content) < 20
+            ):
                 last_sub = final_subtitles[-1]
                 last_sub.content += modified_data.output
                 last_sub.end = current_sub.end
@@ -107,7 +120,7 @@ def main():
                     index=len(final_subtitles) + 1,
                     start=current_sub.start,
                     end=current_sub.end,
-                    content=modified_data.output
+                    content=modified_data.output,
                 )
                 final_subtitles.append(new_sub)
 
@@ -124,8 +137,8 @@ def main():
         with open(output_filename, "w", encoding="utf-8") as f:
             f.write(final_srt_content)
 
-        print("Done!")
-        print(f"Saved the modified result at {output_filename}")
+    print("Done!")
+    print(f"Saved the modified result at {output_filename}")
 
 
 if __name__ == "__main__":

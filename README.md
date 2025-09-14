@@ -9,7 +9,7 @@ pip install faster-whisper moviepy
 ```python
 python 1_delete-blank.py {影片檔案} {空白時長}
 ```
-會直接覆蓋掉原影片檔案。
+會額外生成一個 `output.mp4`。
 
 2_generate-srt.py：生成字幕
 ```python

@@ -43,7 +43,7 @@ def generate_srt(input_file):
         raise FileNotFoundError(f"Couldn't find the target video: {input_file}")
 
     # Configure Whisper model (medium for better accuracy)
-    model_size = "medium"
+    model_size = "large"
     model = WhisperModel(model_size, device="cuda")
     segments, info = model.transcribe(
         audio=input_file,

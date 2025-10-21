@@ -49,6 +49,7 @@ def generate_srt(input_file):
         audio=input_file,
         word_timestamps=True,
         language="zh",
+        initial_prompt="這是一個繁體中文的句子",
     )
 
     # Prepare output file path

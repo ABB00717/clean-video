@@ -90,7 +90,7 @@ def delete_video_blank(input_file, gap=1):
                      "".join(concat_inputs) + \
                      f"concat=n={len(keep_segments)}:v=1:a=1[outv][outa]"
                      
-    output_file = input_file.rsplit(".", 1)[0] + "_trimmed_ffmpeg.mp4"
+    output_file = input_file.rsplit(".", 1)[0] + "_trimmed.mp4"
 
     # Step 3: Run ffmpeg command with h264_nvenc
     command = [

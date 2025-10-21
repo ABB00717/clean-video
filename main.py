@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 from pathlib import Path
+from multiprocessing import Pool
 
 # Import the module functions
 from delete_blank import delete_video_blank
@@ -32,6 +33,10 @@ def process_video(video_path, gap=1):
         srt_file = generate_srt(trimmed_video)
         print(f"✓ Created: {srt_file}\n")
         
+        pid = os.fork()
+        if pid == 0:
+            return
+
         # Step 3: file_trimmed.srt -> file_trimmed_modified.srt
         print("Step 3: Modifying SRT with AI...")
         modified_srt = modify_srt(srt_file)
@@ -68,7 +73,9 @@ def process_video(video_path, gap=1):
         print(f"\n{'='*60}")
         print(f"✓ Successfully processed: {video_path}")
         print(f"{'='*60}\n")
-        
+
+        os.waitpid(pid, 0)
+        os._exit(0)
     except Exception as e:
         print(f"\n✗ Error processing {video_path}: {e}\n")
         sys.exit(1)

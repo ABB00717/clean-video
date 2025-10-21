@@ -1,6 +1,6 @@
 # 環境要求
 ```python
-pip install faster-whisper moviepy python-dotenv google-genai srt
+pip install -r requirements.txt
 ```
 # 使用方法
 依照四個檔案依序處理

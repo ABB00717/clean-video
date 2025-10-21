@@ -70,7 +70,12 @@ def delete_video_blank(input_file, gap=1):
     # Step 3: Combine all clips and save
     combined = concatenate_videoclips(videoclips)
     output_file = input_file.rsplit(".", 1)[0] + "_trimmed.mp4"
-    combined.write_videofile(output_file)
+    combined.write_videofile(
+        output_file,
+        codec='h264_nvenc',      # 使用 NVIDIA GPU 編碼
+        preset='fast',           # nvenc 的預設 (medium) 有點慢，用 fast 就夠了
+        audio_codec='aac'        # 順便指定 audio codec
+    )
     
     return output_file
 

@@ -44,7 +44,7 @@ def clean_video(video_path, gap=1):
         print(f"✓ Renamed: {trimmed_video} -> {final_video}")
         
         # Rename _trimmed_modified.srt to .srt
-        final_srt = video_path.lsplit("_", 1)[0] + ".srt"
+        final_srt = video_path.lsplit(".", 1)[0] + ".srt"
         os.rename(srt_file, final_srt)
         print(f"✓ Renamed: {srt_file} -> {final_srt}")
         

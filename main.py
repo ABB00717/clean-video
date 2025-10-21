@@ -10,6 +10,54 @@ from srt_modifier import modify_srt
 from delete_duplicate_string import delete_duplicate_string
 
 
+def clean_video(video_path, gap=1):
+    """Process a single video file through all steps.
+    
+    Args:
+        video_path: Path to the video file
+        gap: Minimum silence duration (in seconds) to be removed in step 1
+    """
+    print(f"\n{'='*60}")
+    print(f"Processing: {video_path}")
+    print(f"{'='*60}\n")
+
+    try:
+        # Step 1: file.mp4 -> file_trimmed.mp4
+        print("Step 1: Removing blank segments from video...")
+        trimmed_video = delete_video_blank(video_path, gap)
+        print(f"✓ Created: {trimmed_video}\n")
+
+        # Step 2: file_trimmed.mp4 -> file_trimmed.srt
+        print("Step 2: Generating SRT subtitle file...")
+        srt_file = generate_srt(trimmed_video)
+        print(f"✓ Created: {srt_file}\n")
+
+        # Rename original file to _orig.mp4
+        orig_name = video_path.rsplit(".", 1)[0] + "_orig.mp4"
+        if not os.path.exists(orig_name):
+            os.rename(video_path, orig_name)
+            print(f"✓ Renamed: {video_path} -> {orig_name}")
+
+        # Rename _trimmed.mp4 to original name
+        final_video = video_path
+        os.rename(trimmed_video, final_video)
+        print(f"✓ Renamed: {trimmed_video} -> {final_video}")
+
+        # Rename _trimmed_modified.srt to .srt
+        final_srt = video_path.replace("_trimmed_modified", "") 
+        final_srt = srt_file.replace("_trimmed", "") 
+        os.rename(srt_file, final_srt)
+        print(f"✓ Renamed: {srt_file} -> {final_srt}")
+
+        print(f"\n{'='*60}")
+        print(f"✓ Successfully processed: {video_path}")
+        print(f"{'='*60}\n")
+        return video_path
+    except Exception as e:
+        print(f"\n✗ Error processing {video_path}: {e}\n")
+        raise
+
+
 def process_video(video_path, gap=1):
     """Process a single video file through all steps.
 
@@ -97,11 +145,16 @@ def main():
 
     # Create a pool of worker processes
     # The number of processes will be the number of CPU cores by default
-    with Pool(processes=5) as pool:
+    pool = Pool(processes=3)
+    try:
         # Prepare arguments for each process
         process_args = [(video_path, args.gap) for video_path in video_files]
         # Process videos in parallel
-        pool.starmap(process_video, process_args)
+        pool.starmap(clean_video, process_args)
+    finally:
+        # Ensure pool is properly closed
+        pool.close()
+        pool.join()
 
     print("\n" + "="*60)
     print("All videos processed successfully!")

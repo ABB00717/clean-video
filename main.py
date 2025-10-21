@@ -10,6 +10,50 @@ from generate_srt import generate_srt  # Import from 2_generate-srt.py
 from srt_modifier import modify_srt  # Import from 3_srt-modifier.py
 from delete_duplicate_string import delete_duplicate_string  # Import from 4_delete-duplicate-string.py
 
+def clean_video(video_path, gap=1):
+    """Process a single video file through all steps.
+    
+    Args:
+        video_path: Path to the video file
+        gap: Minimum silence duration (in seconds) to be removed in step 1
+    """
+    print(f"\n{'='*60}")
+    print(f"Processing: {video_path}")
+    print(f"{'='*60}\n")
+    
+    try:
+        # Step 1: file.mp4 -> file_trimmed.mp4
+        print("Step 1: Removing blank segments from video...")
+        trimmed_video = delete_video_blank(video_path, gap)
+        print(f"✓ Created: {trimmed_video}\n")
+        
+        # Step 2: file_trimmed.mp4 -> file_trimmed.srt
+        print("Step 2: Generating SRT subtitle file...")
+        srt_file = generate_srt(trimmed_video)
+        print(f"✓ Created: {srt_file}\n")
+        
+        # Rename original file to _orig.mp4
+        orig_name = video_path.rsplit(".", 1)[0] + "_orig.mp4"
+        if not os.path.exists(orig_name):
+            os.rename(video_path, orig_name)
+            print(f"✓ Renamed: {video_path} -> {orig_name}")
+        
+        # Rename _trimmed.mp4 to original name
+        final_video = video_path
+        os.rename(trimmed_video, final_video)
+        print(f"✓ Renamed: {trimmed_video} -> {final_video}")
+        
+        # Rename _trimmed_modified.srt to .srt
+        final_srt = video_path.lsplit("_", 1)[0] + ".srt"
+        os.rename(srt_file, final_srt)
+        print(f"✓ Renamed: {srt_file} -> {final_srt}")
+        
+        print(f"\n{'='*60}")
+        print(f"✓ Successfully processed: {video_path}")
+        print(f"{'='*60}\n")
+    except Exception as e:
+        print(f"\n✗ Error processing {video_path}: {e}\n")
+        sys.exit(1)
 
 def process_video(video_path, gap=1):
     """Process a single video file through all steps.
@@ -105,7 +149,8 @@ def main():
     # Process each video file
     for video in video_files:
         video_path = os.path.join(args.target_dir, video)
-        process_video(video_path, args.gap)
+        # process_video(video_path, args.gap)
+        clean_video(video_path, args.gap)
     
     print("\n" + "="*60)
     print("All videos processed successfully!")
